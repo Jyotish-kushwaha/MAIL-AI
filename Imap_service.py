@@ -6,17 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import decode_header
 from typing import List, Optional
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# ─── Hostinger IMAP / SMTP Config ────────────────────────────────────────────
-IMAP_HOST = "imap.hostinger.com"
-IMAP_PORT = 993  # SSL
-
-SMTP_HOST = "smtp.hostinger.com"
-SMTP_PORT = 465  # SSL  (ya 587 for STARTTLS)
-
+from config import IMAP_HOST, IMAP_PORT, SMTP_HOST, SMTP_PORT, HOSTINGER_EMAIL, HOSTINGER_PASSWORD
 
 def _decode_str(value: str) -> str:
     """Decode encoded email header strings (e.g. =?UTF-8?B?...?=)."""
@@ -48,8 +38,8 @@ class IMAPService:
         email_address: str = None,
         password: str = None,
     ):
-        self.email_address = email_address or os.getenv("HOSTINGER_EMAIL", "")
-        self.password = password or os.getenv("HOSTINGER_PASSWORD", "")
+        self.email_address = email_address or HOSTINGER_EMAIL or ""
+        self.password = password or HOSTINGER_PASSWORD or ""
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
