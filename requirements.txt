@@ -1,0 +1,23 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# AI / LLM
+langchain-groq
+langchain-core
+langchain
+
+# Gmail API
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Data validation
+pydantic>=2.0
+
+# Database — PostgreSQL (production)
+psycopg2-binary>=2.9
+
+# Utilities
+python-dotenv
