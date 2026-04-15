@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 import uvicorn
 import asyncio
+import os
 
 from ai_services import generate_email_reply, categorize_email
 
@@ -231,4 +232,5 @@ if __name__ == "__main__":
     print("Multi-Tenant Server starting!")
     print("Access the dashboard at: http://localhost:8000/dashboard")
     print("="*60 + "\n")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
