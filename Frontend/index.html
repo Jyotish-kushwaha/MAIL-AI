@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MailAI - Multi-Tenant Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Mail<span>AI</span></div>
+      <div class="logo-sub">MULTI-USER SYSTEM</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Workspace</div>
+      <div class="nav-item active" data-tab="dashboard">
+        <div class="nav-dot"></div> Dashboard
+      </div>
+      <div class="nav-item" data-tab="queue">
+        <div class="nav-dot"></div> Email Queue
+        <span class="status-badge" id="queue-count">0</span>
+      </div>
+      <div class="nav-item" data-tab="history">
+        <div class="nav-dot"></div> History
+      </div>
+
+      <div class="nav-section" style="margin-top:16px">Settings</div>
+      <div class="nav-item" data-tab="config">
+        <div class="nav-dot"></div> Auto-Reply Config
+      </div>
+      <div class="nav-item" data-tab="compose">
+        <div class="nav-dot"></div> Test Compose
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <!-- Active Workspace Selector -->
+      <div class="workspace-selector">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:0.5px">ACTIVE WORKSPACE</div>
+        <select id="user-selector" class="form-select auth-select" style="font-size:11px;padding:6px;width:100%">
+          <option value="">Loading users...</option>
+        </select>
+        <button class="btn primary" id="btn-add-account" style="width:100%;justify-content:center;margin-top:8px;font-size:11px;padding:6px">
+          + Add Gmail Account
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn" id="btn-fetch-emails">⟳ Fetch Emails</button>
+        <button class="btn primary" id="btn-auto-process">▶ Auto Process All</button>
+      </div>
+    </div>
+
+    <div class="content" id="main-content">
+       <!-- Tab containers injected dynamically or managed via CSS -->
+       
+       <!-- ── Dashboard Tab ── -->
+      <div id="tab-dashboard" class="tab-content" style="display:block">
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent-line: var(--accent)">
+            <div class="stat-label">Total Processed</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-change" style="color:var(--muted)">All time</div>
+          </div>
+          <div class="stat-card" style="--accent-line: var(--green)">
+            <div class="stat-label">Sent</div>
+            <div class="stat-value" style="color:var(--green)" id="stat-sent">0</div>
+            <div class="stat-change" style="color:var(--green)">Auto-replied</div>
+          </div>
+          <div class="stat-card" style="--accent-line: var(--amber)">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-value" style="color:var(--amber)" id="stat-pending">0</div>
+            <div class="stat-change" style="color:var(--amber)">Needs human</div>
+          </div>
+          <div class="stat-card" style="--accent-line: var(--purple)">
+            <div class="stat-label">Drafts</div>
+            <div class="stat-value" style="color:var(--purple)" id="stat-drafts">0</div>
+            <div class="stat-change" style="color:var(--muted)">Saved</div>
+          </div>
+          <div class="stat-card" style="--accent-line: var(--teal)">
+            <div class="stat-label">Avg Confidence</div>
+            <div class="stat-value" style="color:var(--teal);font-size:22px" id="stat-conf">—</div>
+            <div class="stat-change" style="color:var(--muted)">AI certainty</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Recent emails -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">Recent Activity</div>
+              <div class="panel-meta" id="history-updated">—</div>
+            </div>
+            <div id="recent-list">
+              <div class="empty">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">No processed emails yet.<br>Fetch emails to get started.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category distribution -->
+          <div>
+            <div class="panel" style="margin-bottom:14px">
+              <div class="panel-header">
+                <div class="panel-title">Category Breakdown</div>
+              </div>
+              <div style="padding:16px" id="cat-chart">
+                <div class="empty"><div class="empty-text">No data yet</div></div>
+              </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title">Quick Actions</div></div>
+              <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+                <button class="btn" style="width:100%;justify-content:center" id="qa-fetch">⟳ Fetch Unread</button>
+                <button class="btn primary" style="width:100%;justify-content:center" id="qa-process">▶ Auto-Process Queue</button>
+                <button class="btn" style="width:100%;justify-content:center" id="qa-compose">✉ Test Reply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Queue Tab ── -->
+      <div id="tab-queue" class="tab-content" style="display:none">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Email Queue</div>
+            <button class="btn" id="q-refresh">⟳ Refresh</button>
+          </div>
+          <div id="queue-list">
+            <div class="empty">
+              <div class="empty-icon">📬</div>
+              <div class="empty-text">No emails fetched yet.<br>Click "Fetch Emails".</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── History Tab ── -->
+      <div id="tab-history" class="tab-content" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <select class="form-select filter-select" id="filter-status" style="width:160px">
+            <option value="">All statuses</option>
+            <option value="sent">Sent</option>
+            <option value="pending_review">Pending Review</option>
+            <option value="draft">Draft</option>
+            <option value="error">Error</option>
+          </select>
+          <select class="form-select filter-select" id="filter-category" style="width:160px">
+            <option value="">All categories</option>
+            <option value="complaint">Complaint</option>
+            <option value="inquiry">Inquiry</option>
+            <option value="feedback">Feedback</option>
+            <option value="billing">Billing</option>
+            <option value="refund">Refund</option>
+            <option value="technical_support">Tech Support</option>
+          </select>
+        </div>
+        <div class="panel">
+          <div id="history-list">
+            <div class="empty">
+              <div class="empty-icon">📋</div>
+              <div class="empty-text">No history yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Config Tab ── -->
+      <div id="tab-config" class="tab-content" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Auto-Reply Settings</div></div>
+            <div class="config-form">
+              <div class="form-group">
+                <label class="form-label">Default Tone</label>
+                <select class="form-select" id="cfg-tone">
+                  <option value="professional">Professional</option>
+                  <option value="formal">Formal</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="apologetic">Apologetic</option>
+                  <option value="empathetic">Empathetic</option>
+                  <option value="concise">Concise</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confidence Threshold</label>
+                <div class="slider-row">
+                  <input type="range" class="range-slider" id="cfg-confidence" min="0" max="1" step="0.05" value="0.75">
+                  <span class="range-val" id="conf-val">75%</span>
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">
+                  Replies below this confidence go to human review
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Max Emails per Run</label>
+                <input type="number" class="form-input" id="cfg-max-emails" value="10" min="1" max="100">
+              </div>
+
+              <div style="border-top:1px solid var(--border);padding-top:14px">
+                <div class="toggle-row">
+                  <div>
+                    <div class="toggle-label">Auto-Send Replies</div>
+                    <div class="toggle-sub">Send immediately without manual review</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="cfg-auto-send">
+                    <div class="toggle-slider"></div>
+                  </label>
+                </div>
+              </div>
+
+              <button class="btn primary" id="btn-save-config" style="width:100%;justify-content:center;margin-top:16px">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Compose Tab ── -->
+      <div id="tab-compose" class="tab-content" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Test Email Input</div></div>
+            <div style="padding:16px">
+              <div class="form-group">
+                <label class="form-label">Email Content</label>
+                <textarea class="form-input" id="compose-email" rows="8"
+                  style="resize:vertical;line-height:1.6"
+                  placeholder="Paste a customer email here..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tone</label>
+                <select class="form-select" id="compose-tone">
+                  <option value="professional">Professional</option>
+                  <option value="formal">Formal</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="apologetic">Apologetic</option>
+                </select>
+              </div>
+              <button class="btn primary" id="btn-generate-reply" style="width:100%;justify-content:center">
+                ✦ Generate Reply
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">Generated Reply</div>
+              <div id="reply-meta" style="display:flex;gap:6px"></div>
+            </div>
+            <div id="compose-result" style="padding:16px">
+              <div class="empty">
+                <div class="empty-icon">✦</div>
+                <div class="empty-text">AI reply will appear here</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Email Preview</div>
+      <button class="modal-close" id="btn-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<!-- Notification -->
+<div class="notif" id="notif">
+  <div class="notif-dot" id="notif-dot"></div>
+  <span id="notif-text"></span>
+</div>
+
+<!-- Application Main Javascript -->
+
+<script type="module" src="./js/app.js"></script>
+
+</body>
+</html>
