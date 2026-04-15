@@ -1,4 +1,4 @@
-const BASE_URL = "mail-ai-production.up.railway.app";
+const BASE_URL = "https://mail-ai-production.up.railway.app";
 
 export class API {
   static get userEmail() {
