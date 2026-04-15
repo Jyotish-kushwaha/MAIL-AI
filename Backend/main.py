@@ -26,8 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount the static files directory for modular ES architecture
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = EmailDatabase()
 gmail_service = IMAPService()
@@ -194,10 +192,7 @@ def get_users():
     users = db.get_all_users()
     return {"users": [u["email"] for u in users]}
 
-@app.get("/dashboard")
-def dashboard():
-    """Serve the modular HTML dashboard UI."""
-    return FileResponse("static/index.html")
+
 
 # ─── Background Task ──────────────────────────────────────────────────────────
 
