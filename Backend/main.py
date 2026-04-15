@@ -20,7 +20,11 @@ app = FastAPI(title="AI Email Response System (Multi-Tenant)", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://mail-ai-ochre.vercel.app",  # your frontend URL
+        "http://localhost:8080",             # local testing
+        "http://127.0.0.1:8080"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
