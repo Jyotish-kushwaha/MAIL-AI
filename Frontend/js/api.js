@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "mail-ai-production.up.railway.app";
 
 export class API {
   static get userEmail() {
