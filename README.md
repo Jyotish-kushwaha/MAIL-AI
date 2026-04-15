@@ -1,184 +1,350 @@
-# AI Email Response System v2.0
+# 📧 AI Email Response System v3.0 (Multi-User + Modular Architecture)
 
-A fully automated system that reads incoming Gmail emails, categorizes them, generates context-aware AI replies, and optionally sends them — with a confidence-based human override.
+A fully automated system that reads incoming emails, categorizes them, generates context-aware AI replies, and optionally sends them — with a confidence-based human override.
 
----
+Now upgraded with:
 
-## Features
-
-| Feature | Status |
-|---------|--------|
-| Gmail OAuth2 integration | ✅ |
-| AI reply generation (Groq/LLaMA) | ✅ |
-| Email categorization | ✅ |
-| Tone control (6 options) | ✅ |
-| Duplicate reply prevention | ✅ |
-| Confidence-based human override | ✅ |
-| Background auto-processing | ✅ |
-| SQLite history & analytics | ✅ |
-| Web dashboard UI | ✅ |
+* ✅ **Frontend + Backend separation**
+* ✅ **Multi-user workspace system**
+* ✅ **IMAP/SMTP (Hostinger) support**
+* ✅ **Modern dashboard UI**
 
 ---
 
-## Project Structure
+# 🚀 Features
 
-```
-email_ai_system/
-├── main.py                    # FastAPI app + all routes
-├── config.py                  # API keys & settings
-├── requirements.txt           # Dependencies
-│
-├── services/
-│   ├── ai_services.py         # Groq LLM: reply generation + categorization
-│   └── gmail_service.py       # Gmail API: fetch, send, OAuth2
-│
-├── schemas/
-│   └── email_schema.py        # Pydantic models
-│
-├── utils/
-│   └── database.py            # SQLite: history, deduplication, stats
-│
-└── templates/
-    └── dashboard.html         # Full-featured web dashboard
-```
+| Feature                                 | Status |
+| --------------------------------------- | ------ |
+| Multi-user workspace system             | ✅      |
+| IMAP/SMTP email integration (Hostinger) | ✅      |
+| AI reply generation (Groq / LLaMA)      | ✅      |
+| Email categorization                    | ✅      |
+| Tone control (6 options)                | ✅      |
+| Duplicate reply prevention              | ✅      |
+| Confidence-based human override         | ✅      |
+| Background auto-processing              | ✅      |
+| PostgreSQL / SQLite support             | ✅      |
+| Modular frontend + backend              | ✅      |
+| Modern dashboard UI                     | ✅      |
 
 ---
 
-## Setup
-
-### 1. Install Dependencies
+# 🏗️ Project Structure
 
 ```bash
-pip install -r requirements.txt
+Email-Assistant/
+│
+├── Backend/
+│   ├── main.py
+│   ├── ai_services.py
+│   ├── database.py
+│   ├── Imap_service.py
+│   ├── config.py
+│   ├── email_schema.py
+│   ├── .env
+│   └── requirements.txt
+│
+├── Frontend/
+│   ├── index.html
+│   ├── js/
+│   │   ├── app.js
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── dashboard.js
+│   │   └── ui.js
+│   └── styles.css
+│
+├── README.md
 ```
 
-### 2. Configure API Keys
+---
 
-Create a `.env` file in the project root:
+# ⚙️ Setup Instructions
+
+## 1️⃣ Backend Setup
+
+```bash
+cd Backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+👉 Runs on:
+
+```
+http://localhost:8000
+```
+
+---
+
+## 2️⃣ Frontend Setup
+
+```bash
+cd Frontend
+npx live-server
+```
+
+👉 Runs on:
+
+```
+http://127.0.0.1:8080
+```
+
+---
+
+# 🔗 Frontend ↔ Backend Connection
+
+File: `Frontend/js/api.js`
+
+```js
+const BASE_URL = "http://localhost:8000";
+```
+
+👉 If issue occurs:
+
+```js
+const BASE_URL = "http://127.0.0.1:8000";
+```
+
+---
+
+# 🧪 Debug Guide (VERY IMPORTANT)
+
+## ✅ 1. Backend Health Check
+
+Open:
+
+```
+http://localhost:8000
+```
+
+Expected:
+
+```json
+{"status": "running"}
+```
+
+---
+
+## ✅ 2. API Working?
+
+```
+http://localhost:8000/users
+```
+
+Expected:
+
+```json
+{"users": [...]}
+```
+
+---
+
+## ❌ 3. UI Plain / No Styling
+
+### Cause:
+
+Wrong static paths
+
+### Fix `Frontend/index.html`:
+
+```html
+<link rel="stylesheet" href="./styles.css">
+<script type="module" src="./js/app.js"></script>
+```
+
+❌ DO NOT USE:
+
+```html
+/static/...
+```
+
+---
+
+## ❌ 4. "Failed to fetch" Error
+
+### Causes:
+
+* Backend not running
+* Wrong BASE_URL
+* Port mismatch
+
+### Fix:
+
+* Start backend
+* Check BASE_URL
+* Try `127.0.0.1` instead of `localhost`
+
+---
+
+## ❌ 5. Users Not Loading
+
+Check:
+
+* `/users` API working?
+* `.env` properly configured?
 
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+HOSTINGER_EMAIL=your_email
+HOSTINGER_PASSWORD=your_password
+```
+
+---
+
+## ❌ 6. JS / CSS Not Loading
+
+Check browser console:
+
+```
+Inspect → Console
+```
+
+Errors:
+
+```
+404 js/app.js
+```
+
+👉 Fix paths in `index.html`
+
+---
+
+## ❌ 7. CORS Issue
+
+Already handled in backend:
+
+```python
+allow_origins=["*"]
+```
+
+---
+
+# ⚡ Quick Run Commands
+
+```bash
+# Backend
+cd Backend
+uvicorn main:app --reload
+
+# Frontend
+cd Frontend
+npx live-server
+```
+
+---
+
+# 📡 API Endpoints
+
+| Method | Endpoint               | Description          |
+| ------ | ---------------------- | -------------------- |
+| GET    | `/`                    | Health check         |
+| POST   | `/generate-reply`      | Generate AI reply    |
+| GET    | `/emails/fetch`        | Fetch unread emails  |
+| POST   | `/emails/process/{id}` | Process single email |
+| POST   | `/emails/auto-process` | Process all emails   |
+| POST   | `/emails/approve/{id}` | Approve & send reply |
+| GET    | `/dashboard/stats`     | Get stats            |
+| GET    | `/dashboard/history`   | Get history          |
+| GET    | `/users`               | Get all users        |
+
+---
+
+# 🧠 Email Categories
+
+* complaint
+* inquiry
+* feedback
+* request
+* billing
+* technical_support
+* refund
+* other
+
+---
+
+# 🎯 Tone Options
+
+| Tone         | Use Case             |
+| ------------ | -------------------- |
+| professional | Default business     |
+| formal       | Legal / corporate    |
+| friendly     | Casual communication |
+| apologetic   | Complaints           |
+| empathetic   | Emotional cases      |
+| concise      | Short replies        |
+
+---
+
+# 🤖 Confidence System
+
+* AI returns `confidence` (0–1)
+* Below threshold → `pending_review`
+* Above threshold → draft / auto-send
+
+Default:
+
+```
+0.75 (75%)
+```
+
+---
+
+# ⚙️ Environment Variables
+
+Create `Backend/.env`:
+
+```env
+GROQ_API_KEY=your_key
+HOSTINGER_EMAIL=your_email
+HOSTINGER_PASSWORD=your_password
+
 AUTO_SEND=false
 CONFIDENCE_THRESHOLD=0.75
 MAX_EMAILS_PER_RUN=10
 DEFAULT_TONE=professional
 ```
 
-### 3. Set Up Gmail API
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Create a new project
-3. Enable the **Gmail API**
-4. Go to **APIs & Services → Credentials**
-5. Create **OAuth 2.0 Client ID** (type: Web application)
-6. Add redirect URI: `http://localhost:8000/auth/callback`
-7. Download the credentials as `credentials.json`
-8. Place `credentials.json` in the project root
-
-### 4. Run the Server
-
-```bash
-python main.py
-# or
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### 5. Authenticate Gmail
-
-Visit: `http://localhost:8000/auth/gmail`
-
-This returns an auth URL. Open it in your browser, authorize access, and the token is saved automatically.
-
 ---
 
-## Usage
+# 🧠 Architecture
 
-### Dashboard
-Open `http://localhost:8000/dashboard` for the full web UI.
-
-### API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health check |
-| POST | `/generate-reply` | Manually generate a reply |
-| GET | `/auth/gmail` | Get Gmail OAuth URL |
-| GET | `/auth/callback` | OAuth callback handler |
-| GET | `/emails/fetch` | Fetch unread emails |
-| POST | `/emails/process/{id}` | Process a single email |
-| POST | `/emails/auto-process` | Auto-process all unread |
-| POST | `/emails/approve/{id}` | Approve a pending-review email |
-| GET | `/dashboard/stats` | Get processing statistics |
-| GET | `/dashboard/history` | Get email history |
-
-### Manual Reply Example
-
-```bash
-curl -X POST http://localhost:8000/generate-reply \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email_text": "I placed an order 3 days ago and have not received confirmation.",
-    "tone": "apologetic"
-  }'
 ```
-
-### Auto-Process Configuration
-
-```bash
-curl -X POST http://localhost:8000/emails/auto-process \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tone": "professional",
-    "auto_send": false,
-    "confidence_threshold": 0.75,
-    "max_emails_per_run": 10
-  }'
+Frontend (Live Server / Vercel)
+        ↓
+API Calls (fetch)
+        ↓
+FastAPI Backend
+        ↓
+AI + IMAP + Database
 ```
 
 ---
 
-## Email Categories
+# 🔥 Common Mistakes
 
-The AI automatically classifies emails into:
-- `complaint` — Unhappy customers, negative experiences
-- `inquiry` — Questions, information requests
-- `feedback` — Reviews, suggestions
-- `request` — Feature or service requests
-- `billing` — Payment, invoice, subscription issues
-- `technical_support` — Bug reports, usage help
-- `refund` — Refund/return demands
-- `other` — Everything else
+| Mistake             | Fix              |
+| ------------------- | ---------------- |
+| Using `/static/...` | Use `./` paths   |
+| Backend not running | Start uvicorn    |
+| Wrong BASE_URL      | Fix API URL      |
+| Using file://       | Use live-server  |
+| Not refreshing      | Ctrl + Shift + R |
 
 ---
 
-## Tone Options
+# 🚀 Future Improvements
 
-| Tone | Best For |
-|------|----------|
-| `professional` | General business correspondence |
-| `formal` | Legal, enterprise, official contexts |
-| `friendly` | Consumer brands, casual SaaS |
-| `apologetic` | Complaints, service failures |
-| `empathetic` | Emotional or distressed customers |
-| `concise` | Quick acknowledgements |
+* Deploy frontend → Vercel
+* Deploy backend → Railway / Render
+* Add authentication system
+* Add logging & monitoring
+* Add Docker support
 
 ---
 
-## Confidence & Human Override
+# 👨‍💻 Author
 
-The AI returns a `confidence` score (0.0–1.0) with each reply.
-
-- **Above threshold** → auto-send (if enabled) or save as draft
-- **Below threshold** → saved as `pending_review` for human approval
-
-Use `POST /emails/approve/{id}` to approve and send pending emails.
-
-Default threshold: **75%**
+**Jyotish Kumar**
+AI/ML Engineer 🚀
 
 ---
-
-## Notes
-
-- Without `credentials.json`, the system uses **mock emails** for testing
-- The SQLite database (`email_history.db`) is created automatically
-- Email processing is **idempotent** — already-replied emails are skipped
