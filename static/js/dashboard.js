@@ -20,7 +20,6 @@ export async function loadStats() {
     document.getElementById('stat-drafts').textContent = stats.drafts;
     document.getElementById('stat-conf').textContent = stats.avg_confidence ? (stats.avg_confidence * 100).toFixed(0) + '%' : '—';
 
-    // Category chart
     const cats = stats.categories || {};
     const total = Object.values(cats).reduce((a, b) => a + b, 0) || 1;
     const colors = { complaint:'var(--red)', inquiry:'var(--accent)', feedback:'var(--purple)',
@@ -86,7 +85,6 @@ function renderQueue() {
       </div>
     </div>`).join('');
 
-  // Attach modal and process listeners dynamically
   container.querySelectorAll('.email-item').forEach(el => {
       el.addEventListener('click', (e) => {
           if(!e.target.classList.contains('btn-process-single')) openQueueItemModal(el.dataset.id);
@@ -108,10 +106,46 @@ async function processSingleEmail(emailId) {
       method: 'POST',
       body: JSON.stringify(cfg)
     });
-    notify(`Email ${result.status}: ${result.category || ''}`, result.status === 'sent' ? 'success' : 'warn');
+
+    if (result.status === 'draft_saved' || result.status === 'pending_review') {
+      const reply = result.reply || result.draft || {};
+      const email = emailQueue.find(e => e.id === emailId);
+      const body = `
+        <div style="margin-bottom:10px">
+          <span class="tag tag-${result.category||'other'}">${result.category||'other'}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px">${result.status}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Original Email</div>
+        <div class="email-original">${escHtml(email?.body||email?.snippet||'')}</div>
+        <div style="font-size:12px;color:var(--muted);margin:12px 0 6px">AI Generated Reply</div>
+        <div class="reply-preview">
+          <div class="reply-subject">📧 ${escHtml(reply.subject||'')}</div>
+          <div class="reply-body">${escHtml(reply.body||'')}</div>
+        </div>`;
+      const footer = `
+        <button class="btn btn-close-modal">Cancel</button>
+        <button class="btn primary btn-modal-send-draft" data-id="${emailId}">✉ Send Reply</button>`;
+
+      openModal(email?.subject || 'Draft Reply', body, footer);
+      document.querySelector('.btn-close-modal').addEventListener('click', closeModal);
+      document.querySelector('.btn-modal-send-draft').addEventListener('click', async () => {
+        loading(true);
+        try {
+          await API.request(`/emails/approve/${emailId}`, { method: 'POST' });
+          notify('Reply sent!', 'success');
+          closeModal();
+          emailQueue = emailQueue.filter(e => e.id !== emailId);
+          renderQueue();
+          await loadStats();
+        } catch (e) { notify('Failed to send', 'error'); }
+        finally { loading(false); }
+      });
+    } else {
+      notify(`Email ${result.status}: ${result.category || ''}`, result.status === 'sent' ? 'success' : 'warn');
+      emailQueue = emailQueue.filter(e => e.id !== emailId);
+      renderQueue();
+    }
     await loadStats();
-    emailQueue = emailQueue.filter(e => e.id !== emailId);
-    renderQueue();
   } catch (e) {
     notify('Processing failed', 'error');
   } finally {
@@ -156,7 +190,7 @@ export async function generateTestReply() {
         <div class="reply-body">${escHtml(result.body)}</div>
       </div>`;
     notify('Reply generated', 'success');
-  } catch (e) { notify('Failed to generate reply', 'error'); } 
+  } catch (e) { notify('Failed to generate reply', 'error'); }
   finally { loading(false); }
 }
 
@@ -167,7 +201,7 @@ export async function loadHistory() {
   let path = '/dashboard/history?limit=50';
   if (status) path += `&status=${status}`;
   if (category) path += `&category=${category}`;
-  
+
   try {
     const data = await API.request(path);
     renderHistoryList(data, 'history-list', false);
@@ -218,7 +252,7 @@ function openQueueItemModal(emailId) {
   const footer = `
     <button class="btn btn-close-modal">Cancel</button>
     <button class="btn primary btn-modal-process">Process & Reply</button>`;
-  
+
   openModal(email.subject || '(no subject)', body, footer);
   document.querySelector('.btn-close-modal').addEventListener('click', closeModal);
   document.querySelector('.btn-modal-process').addEventListener('click', () => {
@@ -246,15 +280,15 @@ async function openHistoryModal(emailId) {
         <div class="reply-subject">📧 ${escHtml(item.reply_subject||'')}</div>
         <div class="reply-body">${escHtml(item.reply_body||'')}</div>
       </div>`;
-    
+
     let footer = `<button class="btn btn-close-modal">Close</button>`;
-    if (item.status === 'pending_review') {
-      footer += `<button class="btn primary btn-modal-approve">✓ Approve & Send</button>`;
+    if (item.status === 'pending_review' || item.status === 'draft') {
+      footer += `<button class="btn primary btn-modal-approve">✉ Send Reply</button>`;
     }
 
     openModal(item.subject || '(no subject)', body, footer);
     document.querySelector('.btn-close-modal').addEventListener('click', closeModal);
-    
+
     const approveBtn = document.querySelector('.btn-modal-approve');
     if (approveBtn) {
         approveBtn.addEventListener('click', async () => {
@@ -265,7 +299,7 @@ async function openHistoryModal(emailId) {
               closeModal();
               loadStats();
               if (document.getElementById('tab-history').style.display === 'block') loadHistory();
-            } catch (e) { notify('Failed to send', 'error'); } 
+            } catch (e) { notify('Failed to send', 'error'); }
             finally { loading(false); }
         });
     }
