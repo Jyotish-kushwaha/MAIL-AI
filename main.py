@@ -31,6 +31,15 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 db = EmailDatabase()
 gmail_service = IMAPService()
+# --------------------------
+@app.on_event("startup")
+def load_default_user():
+    email = os.getenv("HOSTINGER_EMAIL")
+    if email:
+        existing_users = db.get_all_users()
+        if not any(u["email"] == email for u in existing_users):
+            db.add_user(email)
+            print(f"✅ Default user added: {email}")
 
 # ─── Core Email Routes ────────────────────────────────────────────────────────
 
